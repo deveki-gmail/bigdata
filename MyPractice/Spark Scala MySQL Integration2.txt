@@ -1,0 +1,635 @@
+[cloudera@quickstart ~]$ spark-shell
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/usr/lib/zookeeper/lib/slf4j-log4j12-1.7.5.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/usr/lib/flume-ng/lib/slf4j-log4j12-1.7.5.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel).
+Welcome to
+      ____              __
+     / __/__  ___ _____/ /__
+    _\ \/ _ \/ _ `/ __/  '_/
+   /___/ .__/\_,_/_/ /_/\_\   version 1.6.0
+      /_/
+
+Using Scala version 2.10.5 (Java HotSpot(TM) 64-Bit Server VM, Java 1.7.0_67)
+Type in expressions to have them evaluated.
+Type :help for more information.
+18/04/25 00:40:32 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+Spark context available as sc (master = local[*], app id = local-1524642037070).
+18/04/25 00:40:54 WARN metastore.ObjectStore: Version information not found in metastore. hive.metastore.schema.verification is not enabled so recording the schema version 1.1.0
+18/04/25 00:40:55 WARN metastore.ObjectStore: Failed to get database default, returning NoSuchObjectException
+18/04/25 00:40:57 WARN shortcircuit.DomainSocketFactory: The short-circuit local reads feature cannot be used because libhadoop cannot be loaded.
+SQL context available as sqlContext.
+
+scala> val url = "jdbc:mysql://172.20.135.103:3306/spark_data"
+url: String = jdbc:mysql://172.20.135.103:3306/spark_data
+
+scala> val user = "root"
+user: String = root
+
+scala> val password = "admin"
+password: String = admin
+
+scala> Class.forName("com.mysql.jdbc.Driver")
+res0: Class[_] = class com.mysql.jdbc.Driver
+
+scala> import java.util.Properties
+import java.util.Properties
+
+scala> val connectionProperties = new Properties()
+connectionProperties: java.util.Properties = {}
+//connectionProperties.put("user", "root")
+scala> connectionProperties.put("user", user)
+res1: Object = null
+
+scala> connectionProperties.put("user", "root")
+res2: Object = root
+
+scala> connectionProperties.put("password", "admin")
+res3: Object = null
+
+scala> connectionProperties
+res4: java.util.Properties = {user=root, password=admin}
+
+scala> import java.sql.DriverManager
+import java.sql.DriverManager
+
+scala> val connection = DriverManager.getConnection(url, "root", "admin")
+connection: java.sql.Connection = com.mysql.jdbc.JDBC4Connection@4cc271f6
+
+scala> val person_master_table = sqlContext.read.jdbc(url, "person_master", connectionProperties)
+person_master_table: org.apache.spark.sql.DataFrame = [panNo: string, aadharNo: string, firstName: string, lastName: string, city: string, genderCode: string, countryCode: string, graduation: string, graduationCourseCode: string, postGraduation: string, postGraduationCode: string]
+
+scala> var contry_master_table=sqlContext.read.jdbc(url, "country_master", connectionProperties)
+contry_master_table: org.apache.spark.sql.DataFrame = [countryCode: string, countryName: string]
+
+scala> var course_master_table=sqlContext.read.jdbc(url, "course_master", connectionProperties)
+course_master_table: org.apache.spark.sql.DataFrame = [courseCode: string, courseLevel: string, courseName: string]
+
+scala> var currency_master_table=sqlContext.read.jdbc(url, "currency_master", connectionProperties)
+currency_master_table: org.apache.spark.sql.DataFrame = [currencyCode: string, currency: string]
+
+scala> var department_master_table=sqlContext.read.jdbc(url, "department_master", connectionProperties)
+department_master_table: org.apache.spark.sql.DataFrame = [deptCode: string, deptName: string]
+
+scala> var employment_type_table=sqlContext.read.jdbc(url, "employment_type", connectionProperties)
+employment_type_table: org.apache.spark.sql.DataFrame = [empTypeCode: string, empTypeString: string]
+
+scala> var gender_master_table=sqlContext.read.jdbc(url, "gender_master", connectionProperties)
+gender_master_table: org.apache.spark.sql.DataFrame = [genderCode: string, gender: string]
+
+scala> person_master_table.registerTempTable("person");
+
+scala> contry_master_table.registerTempTable("country");
+
+scala> course_master_table.registerTempTable("course");
+
+scala> currency_master_table.registerTempTable("currency");
+
+scala> department_master_table.registerTempTable("dept");
+
+scala> employment_type_table.registerTempTable("employment");
+
+scala> gender_master_table.registerTempTable("gender");
+
+scala> sql("select panNo, aadharNo, concat(firstName, ' ', lastName) as name from person").show(1);
++----------+----------------+--------------+
+|     panNo|        aadharNo|          name|
++----------+----------------+--------------+
+|GW5A2U54T5|0000083218354127|Guillermo GYDE|
++----------+----------------+--------------+
+only showing top 1 row
+                
+scala> var df = person_master_table.join(gender_master_table,person_master_table.col("genderCode")===gender_master_table.col("genderCode"));
+df: org.apache.spark.sql.DataFrame = [panNo: string, aadharNo: string, firstName: string, lastName: string, city: string, genderCode: string, countryCode: string, graduation: string, graduationCourseCode: string, postGraduation: string, postGraduationCode: string, genderCode: string, gender: string]
+			^
+scala> df.show(5);
++----------+----------------+---------+---------+-------+----------+-----------+----------+--------------------+--------------+------------------+----------+------+
+|     panNo|        aadharNo|firstName| lastName|   city|genderCode|countryCode|graduation|graduationCourseCode|postGraduation|postGraduationCode|genderCode|gender|
++----------+----------------+---------+---------+-------+----------+-----------+----------+--------------------+--------------+------------------+----------+------+
+|QMD5C14071|0000216713518513|    Emmer|WITTNEBEN|KHANDWA|         F|         US|         N|                    |             Y|               MBA|         F|Female|
+|TTJ342M55P|0000485166557657|  Annetta|  HIEBNER| KANPUR|         F|         US|         N|                    |             N|                  |         F|Female|
+|LK802FFWOY|0000520725012101|    Eddie|STOCKFISH|  SYDNY|         F|         IN|         Y|                 BSC|             N|                  |         F|Female|
+|H4QEVH7H6V|0000582018642060|      Amy|ALTENBERN|   PUNE|         F|         US|         Y|                 BSC|             N|                  |         F|Female|
+|N362S42PJQ|0001326563608886|Augustine|    HAINZ|  SYDNY|         F|         IN|         Y|                BCOM|             Y|               MBA|         F|Female|
++----------+----------------+---------+---------+-------+----------+-----------+----------+--------------------+--------------+------------------+----------+------+
+only showing top 5 rows
+
+scala> var df2 = df.join(contry_master_table, df.col("countryCode")===contry_master_table.col("countryCode"));
+df2: org.apache.spark.sql.DataFrame = [panNo: string, aadharNo: string, firstName: string, lastName: string, city: string, genderCode: string, countryCode: string, graduation: string, graduationCourseCode: string, postGraduation: string, postGraduationCode: string, genderCode: string, gender: string, countryCode: string, countryName: string]
+
+scala> df2.registerTempTable("df2");
+
+scala> var df3 = sql("select * from df2");
+df3: org.apache.spark.sql.DataFrame = [panNo: string, aadharNo: string, firstName: string, lastName: string, city: string, genderCode: string, countryCode: string, graduation: string, graduationCourseCode: string, postGraduation: string, postGraduationCode: string, genderCode: string, gender: string, countryCode: string, countryName: string]
+
+---------------------- All Required Commands in One Shot----------------------------------
+/// Short work
+Class.forName("com.mysql.jdbc.Driver");
+import java.util.Properties;
+val connectionProperties = new Properties()
+val url = "jdbc:mysql://172.20.135.103:3306/spark_data";
+connectionProperties.put("user", "root")
+connectionProperties.put("password", "admin")
+import java.sql.DriverManager;
+val person_master_table = sqlContext.read.jdbc(url, "person_master", connectionProperties);
+var contry_master_table=sqlContext.read.jdbc(url, "country_master", connectionProperties);
+var course_master_table=sqlContext.read.jdbc(url, "course_master", connectionProperties);
+var currency_master_table=sqlContext.read.jdbc(url, "currency_master", connectionProperties);
+var department_master_table=sqlContext.read.jdbc(url, "department_master", connectionProperties);
+var employment_type_table=sqlContext.read.jdbc(url, "employment_type", connectionProperties);
+var gender_master_table=sqlContext.read.jdbc(url, "gender_master", connectionProperties);
+var employee_master_table=sqlContext.read.jdbc(url, "employee_master", connectionProperties);
+var emp_sal_master_table=sqlContext.read.jdbc(url, "employee_salary_master", connectionProperties);
+var emp_month_sal=sqlContext.read.jdbc(url, "employee_monthly_salary", connectionProperties);
+
+person_master_table.registerTempTable("person");
+contry_master_table.registerTempTable("country");
+course_master_table.registerTempTable("course");
+currency_master_table.registerTempTable("currency");
+department_master_table.registerTempTable("dept");
+employment_type_table.registerTempTable("employment");
+gender_master_table.registerTempTable("gender");
+employee_master_table.registerTempTable("employee");
+emp_sal_master_table.registerTempTable("emp_salary");
+////
+
+******************************************************************************************
+******************************************************************************************
+Exercise 1 : Find out the number of graduate persons, course wise.
+
+var grad = person_master_table.filter("graduation = 'Y'").groupBy("graduationCourseCode").count();
+val dfToWrite = grad.join(course_master_table, grad("graduationCourseCode")===course_master_table("courseCode")).select($"courseName",$"count");
+
+dfToWrite.write.jdbc(url, "temp_course_person_data", connectionProperties);
+
+OutPut :-----The Data has been inserted into DB table temp_course_person_data. so selecting from same database table..
+mysql> select * from temp_course_person_data;
++----------------------+-------+
+| courseName           | count |
++----------------------+-------+
+| BACHELOR OF COMMERCE | 37490 |
+| BACHELOR OF SCIENCE  | 37493 |
++----------------------+-------+
+2 rows in set (0.00 sec)
+******************************************************************************************
+******************************************************************************************
+Exercise 2 : Find out the number of all Female persons who completed MBA .
+
+scala> val count1 = person_master_table.filter("genderCode = 'F'").filter("postGraduation = 'Y'").filter("postGraduationCode = 'MBA'").count();
+count1: Long = 5204
+
+scala> 
+******************************************************************************************
+******************************************************************************************
+Exercise 3 : Find out the number of all Male persons who completed MBA .
+scala> val count1 = person_master_table.filter("genderCode = 'M'").filter("postGraduation = 'Y'").filter("postGraduationCode = 'MBA'").count();
+count1: Long = 32425
+
+******************************************************************************************
+******************************************************************************************
+Exercise 4 : Get the names of all female persons who are in India.
+scala> val allIndianPersons = person_master_table.filter("genderCode = 'F' and countryCode = 'IN'").select("firstName","lastName","countryCode");
+allIndianPersons: org.apache.spark.sql.DataFrame = [firstName: string, lastName: string, countryCode: string]
+
+scala> val allIndianFeMalePersons = allIndianPersons.join(contry_master_table,allIndianPersons("countryCode")===contry_master_table("countryCode"));
+allIndianFeMalePersons: org.apache.spark.sql.DataFrame = [firstName: string, lastName: string, countryCode: string, countryCode: string, countryName: string]
+
+
+scala> allIndianFeMalePersons.select("firstName","lastName","countryName").show();
++---------+----------+-----------+                                              
+|firstName|  lastName|countryName|
++---------+----------+-----------+
+|    Eddie| STOCKFISH|      INDIA|
+|Augustine|     HAINZ|      INDIA|
+|  Luvenia|        EU|      INDIA|
+|    Eddie|       AIM|      INDIA|
+|    Leora|   WEPKING|      INDIA|
+|  Eugenia|HINESTROZA|      INDIA|
+|    Bella|    NEGREY|      INDIA|
+|   Sophia|   OSTREGA|      INDIA|
+|   Rossie|    BAROFF|      INDIA|
+|   Maymie|    OGREEN|      INDIA|
+|    Ludie|  KISABETH|      INDIA|
+|  Letitia|     EPPER|      INDIA|
+| Eleanore|  SCHNEBEL|      INDIA|
+|  Camilla|  GUTLEBER|      INDIA|
+|     Liza|   CORSTEN|      INDIA|
+|     Gene|    GAMBAL|      INDIA|
+|  Rosetta|    DODIRY|      INDIA|
+|     Nena|    CARELS|      INDIA|
+|Catherine|      FENO|      INDIA|
+|    Clare|  KANGISER|      INDIA|
++---------+----------+-----------+
+only showing top 20 rows
+
+
+******************************************************************************************
+******************************************************************************************
+Exercise 5 : Get the names of all male persons who are in US.
+scala> val allUSMalePersons = person_master_table.filter("genderCode = 'M' and countryCode = 'US'").select("firstName","lastName","countryCode");
+allUSMalePersons: org.apache.spark.sql.DataFrame = [firstName: string, lastName: string, countryCode: string]
+
+scala> val usMalePersons = allUSMalePersons.join(contry_master_table, allJapaneseMalePersons("countryCode")===contry_master_table("countryCode"));
+usMalePersons: org.apache.spark.sql.DataFrame = [firstName: string, lastName: string, countryCode: string, countryCode: string, countryName: string]
+
+scala> usMalePersons.select("firstName","lastName", "countryName").show();
++---------+----------+------------+                                             
+|firstName|  lastName| countryName|
++---------+----------+------------+
+|Guillermo|      GYDE|UNITED STATE|
+|   Javier|DEFFENDALL|UNITED STATE|
+|  Jackson|   MASSELL|UNITED STATE|
+| Laurence|   NASELLO|UNITED STATE|
+|    Alvis|    SEIDER|UNITED STATE|
+|      Bee|   NOVOSAD|UNITED STATE|
+|     Jody|    SIVERT|UNITED STATE|
+|    Anton|    MCCOIG|UNITED STATE|
+|    Wiley|    RODELA|UNITED STATE|
+|   Thomas|    HORSCH|UNITED STATE|
+|    Emery|SURAPANENI|UNITED STATE|
+|  Garrett|    RINGLE|UNITED STATE|
+|    Royal|    PRASEK|UNITED STATE|
+|   Antone| GROENEWEG|UNITED STATE|
+|   Virgil|     JENTZ|UNITED STATE|
+|   Norman| STEINBURG|UNITED STATE|
+| Eldridge|      HOLK|UNITED STATE|
+|     Buck|   BARHYDT|UNITED STATE|
+|   Hunter|    LISCUM|UNITED STATE|
+|     Lane|    ORPHEY|UNITED STATE|
++---------+----------+------------+
+only showing top 20 rows
+
+
+scala> 
+
+******************************************************************************************
+******************************************************************************************
+Exercise 6 : No of persons graduated but not post graduated.
+scala> val noOfGraduatedButNotPG = person_master_table.filter("graduation = 'Y' and postGraduation='N'").count();
+noOfGraduatedButNotPG: Long = 37747
+scala> 
+******************************************************************************************
+******************************************************************************************
+Exercise 7 : No of females and males.
+scala> val maleFemaleGrpBy = person_master_table.groupBy("genderCode").count();
+maleFemaleGrpBy: org.apache.spark.sql.DataFrame = [genderCode: string, count: bigint]
+
+scala> maleFemaleGrpBy.show();
++----------+------+                                                             
+|genderCode| count|
++----------+------+
+|         F| 21000|
+|         M|129000|
++----------+------+
+scala> 
+******************************************************************************************
+******************************************************************************************
+Exercise 8 : No of all permanent and contract employees.
+
+scala> employee_master_table.registerTempTable("employee");
+
+scala> val empByEmploymentType=employee_master_table.groupBy("empTypeCode").count();
+empByEmploymentType: org.apache.spark.sql.DataFrame = [empTypeCode: string, count: bigint]
+
+scala> empByEmploymentType.show();
++-----------+-----+                                                             
+|empTypeCode|count|
++-----------+-----+
+|          C|30914|
+|          P|31033|
++-----------+-----+
+
+scala> val temp1 = empByEmploymentType.join(employment_type_table, empByEmploymentType("empTypeCode")===employment_type_table("empTypeCode"));
+temp1: org.apache.spark.sql.DataFrame = [empTypeCode: string, count: bigint, empTypeCode: string, empTypeString: string]
+
+scala> temp1.select("empTypeString","count").show();
++-------------+-----+                                                           
+|empTypeString|count|
++-------------+-----+
+|     CONTRACT|30914|
+|    PERMANENT|31033|
++-------------+-----+
+
+
+scala> 
+
+
+******************************************************************************************
+******************************************************************************************
+Exercise 9 : Name, Company, Gender, PAN, EmpID, AAdhar no, City, Country of all resigned employees.
+scala> var allResignedEmps = employee_master_table.filter("resigned = 'Y'");
+allResignedEmps: org.apache.spark.sql.DataFrame = [empID: string, company: string, deptCode: string, empTypeCode: string, resigned: string, project: string, aadharNo: string, joiningDate: string]
+
+scala> val df1 = allResignedEmps.join(person_master_table, allResignedEmps("aadharNo")===person_master_table("aadharNo"));
+df1: org.apache.spark.sql.DataFrame = [empID: string, company: string, deptCode: string, empTypeCode: string, resigned: string, project: string, aadharNo: string, joiningDate: string, panNo: string, aadharNo: string, firstName: string, lastName: string, city: string, genderCode: string, countryCode: string, graduation: string, graduationCourseCode: string, postGraduation: string, postGraduationCode: string]
+
+scala> df1.select("empId", "firstName", "lastName", "company","city").show();
++-----+---------+--------+-------+------+                                       
+|empId|firstName|lastName|company|  city|
++-----+---------+--------+-------+------+
+| 3500|     Elie|  KEETON|  UBICS|  PUNE|
+| 1000|   Layton|   COOKE|Fujitsu|NAGPUR|
+| 2500|  Erastus|    HIGH|Infosys|  AGRA|
+|  506|    Carey|   DRAKE| Tarmin|NARITA|
++-----+---------+--------+-------+------+
+scala> 
+
+******************************************************************************************
+******************************************************************************************
+Exercise 11 : No of employees, company wise.
+scala> val df2 = employee_master_table.groupBy("company").count();
+df2: org.apache.spark.sql.DataFrame = [company: string, count: bigint]
+
+scala> df2.show();
++---------+-----+                                                               
+|  company|count|
++---------+-----+
+|  Infosys| 6944|
+|Synechron| 6829|
+|      TCS| 6803|
+|   Tarmin| 6857|
+|      RBC| 6885|
+|    UBICS| 6935|
+|  Fujitsu| 6909|
+|    Wipro| 6993|
+| NTT Data| 6792|
++---------+-----+
+
+
+******************************************************************************************
+******************************************************************************************
+Exercise 12 : All Personal Detail of any person for given aadhar no.
+scala> val uid = "1104515456002247";
+uid: String = 1104515456002247
+
+scala> val def2 = person_master_table.filter("aadharNo = "+uid);
+def2: org.apache.spark.sql.DataFrame = [panNo: string, aadharNo: string, firstName: string, lastName: string, city: string, genderCode: string, countryCode: string, graduation: string, graduationCourseCode: string, postGraduation: string, postGraduationCode: string]
+
+scala> def2.show();
++----------+----------------+---------+--------+------+----------+-----------+----------+--------------------+--------------+------------------+
+|     panNo|        aadharNo|firstName|lastName|  city|genderCode|countryCode|graduation|graduationCourseCode|postGraduation|postGraduationCode|
++----------+----------------+---------+--------+------+----------+-----------+----------+--------------------+--------------+------------------+
+|L6W2807170|1104515456002247|     John|   SMITH|NAGPUR|         M|         US|         N|                    |             N|                  |
++----------+----------------+---------+--------+------+----------+-----------+----------+--------------------+--------------+------------------+
+scala> 
+******************************************************************************************
+******************************************************************************************
+Exercise 13 : All Personal and employment Detail of any person for given aadhar no.
+scala> val uid = "1104515456002247";
+uid: String = 1104515456002247
+
+scala> val def2 = person_master_table.filter("aadharNo = "+uid);
+def2: org.apache.spark.sql.DataFrame = [panNo: string, aadharNo: string, firstName: string, lastName: string, city: string, genderCode: string, countryCode: string, graduation: string, graduationCourseCode: string, postGraduation: string, postGraduationCode: string]
+
+scala> def2.show();
++----------+----------------+---------+--------+------+----------+-----------+----------+--------------------+--------------+------------------+
+|     panNo|        aadharNo|firstName|lastName|  city|genderCode|countryCode|graduation|graduationCourseCode|postGraduation|postGraduationCode|
++----------+----------------+---------+--------+------+----------+-----------+----------+--------------------+--------------+------------------+
+|L6W2807170|1104515456002247|     John|   SMITH|NAGPUR|         M|         US|         N|                    |             N|                  |
++----------+----------------+---------+--------+------+----------+-----------+----------+--------------------+--------------+------------------+
+
+
+scala> val def3 = def2.join(employee_master_table, def2("aadharNo")===employee_master("aadharNo"));
+<console>:39: error: not found: value employee_master
+         val def3 = def2.join(employee_master_table, def2("aadharNo")===employee_master("aadharNo"));
+                                                                        ^
+
+scala> val def3 = def2.join(employee_master_table, def2("aadharNo")===employee_master_table("aadharNo"));
+def3: org.apache.spark.sql.DataFrame = [panNo: string, aadharNo: string, firstName: string, lastName: string, city: string, genderCode: string, countryCode: string, graduation: string, graduationCourseCode: string, postGraduation: string, postGraduationCode: string, empID: string, company: string, deptCode: string, empTypeCode: string, resigned: string, project: string, aadharNo: string, joiningDate: string]
+
+scala> def3.show();
++----------+----------------+---------+--------+------+----------+-----------+----------+--------------------+--------------+------------------+-----+-------+--------+-----------+--------+-------------+----------------+-----------+
+|     panNo|        aadharNo|firstName|lastName|  city|genderCode|countryCode|graduation|graduationCourseCode|postGraduation|postGraduationCode|empID|company|deptCode|empTypeCode|resigned|      project|        aadharNo|joiningDate|
++----------+----------------+---------+--------+------+----------+-----------+----------+--------------------+--------------+------------------+-----+-------+--------+-----------+--------+-------------+----------------+-----------+
+|L6W2807170|1104515456002247|     John|   SMITH|NAGPUR|         M|         US|         N|                    |             N|                  |    1|    TCS|       A|          P|       N|American Bank|1104515456002247| 10/01/2017|
++----------+----------------+---------+--------+------+----------+-----------+----------+--------------------+--------------+------------------+-----+-------+--------+-----------+--------+-------------+----------------+-----------+
+scala> 
+******************************************************************************************
+******************************************************************************************
+Exercise 14 : No of employees who are taking salary in Japanese currency.
+scala> val df3 = emp_sal_master_table.filter("currencyCode = 'JP'");
+df3: org.apache.spark.sql.DataFrame = [empID: string, basicSalary: int, specialAllowance: int, currencyCode: string]
+
+scala> df3.show();
++-----+-----------+----------------+------------+
+|empID|basicSalary|specialAllowance|currencyCode|
++-----+-----------+----------------+------------+
+|  124|     150300|          565230|          JP|
+| 1555|     150050|          565220|          JP|
+|    2|      20000|           30520|          JP|
+| 2000|     208000|           30520|          JP|
+|    4|      40000|           60520|          JP|
+|  477|     400600|          605220|          JP|
+|  590|     550060|          565230|          JP|
+|  688|     600030|          905320|          JP|
++-----+-----------+----------------+------------+
+
+
+scala> df3.groupBy("currencyCode").count();
+res41: org.apache.spark.sql.DataFrame = [currencyCode: string, count: bigint]
+
+scala> df3.groupBy("currencyCode").count().show();
++------------+-----+                                                            
+|currencyCode|count|
++------------+-----+
+|          JP|    8|
++------------+-----+
+scala> 
+******************************************************************************************
+******************************************************************************************
+Exercise 15 : No of employees who are taking salary in Indian currency.
+scala> val df3 = emp_sal_master_table.filter("currencyCode = 'IN'");
+df3: org.apache.spark.sql.DataFrame = [empID: string, basicSalary: int, specialAllowance: int, currencyCode: string]
+
+scala> df3.show();
++-----+-----------+----------------+------------+
+|empID|basicSalary|specialAllowance|currencyCode|
++-----+-----------+----------------+------------+
+|    1|      15000|           56520|          IN|
+|  100|     545000|           56520|          IN|
+|  242|    2006050|          305220|          IN|
+| 2775|     200030|          305220|          IN|
+|    3|      35000|           46520|          IN|
+| 3555|     350050|          465320|          IN|
+|  367|     350300|          465280|          IN|
+|  385|     350060|           46520|          IN|
+| 4585|     400040|           60520|          IN|
+|  464|     400500|          605220|          IN|
+|    5|      55000|           56520|          IN|
+|  544|     550040|          565220|          IN|
+|  558|     550300|          564520|          IN|
+|    6|      60000|           90520|          IN|
+| 6000|     600060|          905240|          IN|
+|  634|     600030|          905250|          IN|
++-----+-----------+----------------+------------+
+
+
+scala> df3.groupBy("currencyCode").count().show();
++------------+-----+                                                            
+|currencyCode|count|
++------------+-----+
+|          IN|   16|
++------------+-----+
+scala> 
+******************************************************************************************
+******************************************************************************************
+Exercise 16 : Name of all employees who are from India and working on contract.
+scala> import sqlContext.implicits;
+import sqlContext.implicits
+scala> person_master_table.as("d1").join(employee_master_table.as("d2"), $"d1.aadharNo"===$"d2.aadharNo").filter("countryCode = 'IN' and empTypeCode = 'C'").select("firstName","lastName","genderCode","company").show();
++---------+-----------+----------+---------+
+|firstName|   lastName|genderCode|  company|
++---------+-----------+----------+---------+
+|    Hideo|     SEIFER|         M|      RBC|
+|    Logan|   HOAGLAND|         M|      RBC|
+|  Maxwell|      COOKS|         M|   Tarmin|
+|   Daniel|       ZITO|         M|      TCS|
+|   Vernie|   BASKETTE|         M|   Tarmin|
+|   Howell|      IRONS|         M|  Fujitsu|
+|  Addison|     BIGBEE|         M|      TCS|
+|  Gregory|      HAJEK|         M|  Infosys|
+|   Dalton|     SHOREY|         M|      RBC|
+|  Malcolm| HOMMERDING|         M|  Infosys|
+|   Joshua|    LEGRAND|         M|Synechron|
+|      Lon| VANANTWERP|         M|      TCS|
+|  Winfred|      LOURY|         M| NTT Data|
+| Reinhold|      GARDE|         M|    UBICS|
+|     Noel|     FRISKE|         M|    Wipro|
+|   Volney|     WIGGER|         M|    UBICS|
+|     Leon|VENTIMIGLIA|         M|Synechron|
+|    Meyer|    PARLIER|         M|  Infosys|
+|      Rex|  BROADWELL|         M| NTT Data|
+|   Simeon|     RIGGIN|         M|Synechron|
++---------+-----------+----------+---------+
+only showing top 20 rows
+
+
+scala> 
+
+
+******************************************************************************************
+******************************************************************************************
+Exercise 17 : No of employees department wise.
+scala> val df1 = employee_master_table.groupBy("deptCode").count();
+df1: org.apache.spark.sql.DataFrame = [deptCode: string, count: bigint]
+
+scala> df1.show();
++--------+-----+
+|deptCode|count|
++--------+-----+
+|       A|12421|
+|       C|12295|
+|       I|12517|
+|       M|12271|
+|       S|12443|
++--------+-----+
+scala> val df2 = df1.join(department_master_table, df1("deptCode")===department_master_table("deptCode"));
+df2: org.apache.spark.sql.DataFrame = [deptCode: string, count: bigint, deptCode: string, deptName: string]
+
+scala> val df3 =  df2.select("deptName", "count");
+df3: org.apache.spark.sql.DataFrame = [deptName: string, count: bigint]
+
+scala> df3.show();
++----------------+-----+                                                        
+|        deptName|count|
++----------------+-----+
+|           Admin|12421|
+|Computer Science|12295|
+|              IT|12517|
+|      Management|12271|
+|           Sales|12443|
++----------------+-----+
+
+
+scala> 
+
+
+******************************************************************************************
+******************************************************************************************
+Exercise 18 : Received salary for a month and year for a given employee ID.Display Name, 
+			Employee ID,Company, Month, Year, Salary
+scala> val month="01";
+month: String = 01
+
+scala> val year = "2018";
+year: String = 2018
+
+scala> val empId = "1";
+empId: String = 1
+
+scala> val df1 = emp_month_sal.filter("empID = "+empId+" and month = "+month+" and year = "+year);
+df1: org.apache.spark.sql.DataFrame = [emsId: string, empID: string, basicSalary: int, specialAllowance: int, month: string, year: string, totalSalary: int]
+
+scala> val df2 = df1.as("df1").join(employee_master_table.as("emp"),df1("empID")===employee_master_table("empID")).select($"df1.empID",$"company",$"month",$"year",$"totalSalary",$"aadharNo");
+df2: org.apache.spark.sql.DataFrame = [empID: string, company: string, month: string, year: string, totalSalary: int, aadharNo: string]
+
+scala> val df3 = df2.as("df2").join(person_master_table.as("person"), df2("aadharNo")===person_master_table("aadharNo"));
+df3: org.apache.spark.sql.DataFrame = [empID: string, company: string, month: string, year: string, totalSalary: int, aadharNo: string, panNo: string, aadharNo: string, firstName: string, lastName: string, city: string, genderCode: string, countryCode: string, graduation: string, graduationCourseCode: string, postGraduation: string, postGraduationCode: string]
+
+scala> val df4 = df3.select("df2.empID","person.firstName","person.lastName","person.aadharNo","df2.company","df2.month","df2.year","df2.totalSalary");
+df4: org.apache.spark.sql.DataFrame = [empID: string, firstName: string, lastName: string, aadharNo: string, company: string, month: string, year: string, totalSalary: int]
+
+scala> df4.show();
++-----+---------+--------+----------------+-------+-----+----+-----------+      
+|empID|firstName|lastName|        aadharNo|company|month|year|totalSalary|
++-----+---------+--------+----------------+-------+-----+----+-----------+
+|    1|     John|   SMITH|1104515456002247|    TCS|   01|2018|     150000|
++-----+---------+--------+----------------+-------+-----+----+-----------+
+
+
+scala> 
+
+
+******************************************************************************************
+******************************************************************************************
+Exercise 19/20(Combined) : Get Total income against a PAN No.
+scala> val panNo = "L6W2807170";
+panNo: String = L6W2807170
+
+scala> val aadharNo = person_master_table.filter("panNo = '"+panNo+"'").select("aadharNo").first().getString(0);
+aadharNo: String = 1104515456002247
+
+scala> val empId  = employee_master_table.filter("aadharNo = '"+aadharNo+"'").select("empID").first().getString(0);
+empId: String = 1
+
+scala> val totalSalary= emp_month_sal.filter("empID = '"+empId+"'").groupBy("empID").sum("totalSalary").first().getLong(1);
+totalSalary: Long = 600400                                                      
+
+scala> 
+******************************************************************************************
+******************************************************************************************
+Exercise 21 : No of Indian Contract Employees company wise.
+scala> val df1 = employee_master_table.filter("empTypeCode = 'C'");
+df1: org.apache.spark.sql.DataFrame = [empID: string, company: string, deptCode: string, empTypeCode: string, resigned: string, project: string, aadharNo: string, joiningDate: string]
+
+scala> val df2 = df1.as("df1").join(person_mater_table.as("person"), df1("aadharNo")===person_master_table("aadharNo"));
+<console>:38: error: not found: value person_mater_table
+         val df2 = df1.as("df1").join(person_mater_table.as("person"), df1("aadharNo")===person_master_table("aadharNo"));
+                                      ^
+
+scala> val df2 = df1.as("df1").join(person_master_table.as("person"), df1("aadharNo")===person_master_table("aadharNo"));
+df2: org.apache.spark.sql.DataFrame = [empID: string, company: string, deptCode: string, empTypeCode: string, resigned: string, project: string, aadharNo: string, joiningDate: string, panNo: string, aadharNo: string, firstName: string, lastName: string, city: string, genderCode: string, countryCode: string, graduation: string, graduationCourseCode: string, postGraduation: string, postGraduationCode: string]
+
+scala> val df3 = df2.filter("countryCode = 'IN'").groupBy("company").count();
+df3: org.apache.spark.sql.DataFrame = [company: string, count: bigint]
+
+scala> df3.show();
++---------+-----+                                                               
+|  company|count|
++---------+-----+
+|  Infosys| 1706|
+|Synechron| 1703|
+|      TCS| 1716|
+|   Tarmin| 1758|
+|      RBC| 1727|
+|    UBICS| 1731|
+|  Fujitsu| 1745|
+|    Wipro| 1729|
+| NTT Data| 1713|
++---------+-----+
+scala> 
+******************************************************************************************
+******************************************************************************************

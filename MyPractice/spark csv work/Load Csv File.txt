@@ -1,0 +1,82 @@
+[cloudera@quickstart ~]$ spark-shell --jars /home/cloudera/spark-csv-jar/commons-csv-1.4.jar,/home/cloudera/spark-csv-jar/scala-library-2.10.5.jar,/hodera/spark-csv-jar/spark-csv_2.10-1.5.0.jar,/home/cloudera/spark-csv-jar/univocity-parsers-1.5.1.jar
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/usr/lib/zookeeper/lib/slf4j-log4j12-1.7.5.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/usr/lib/flume-ng/lib/slf4j-log4j12-1.7.5.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel).
+Welcome to
+      ____              __
+     / __/__  ___ _____/ /__
+    _\ \/ _ \/ _ `/ __/  '_/
+   /___/ .__/\_,_/_/ /_/\_\   version 1.6.0
+      /_/
+
+Using Scala version 2.10.5 (Java HotSpot(TM) 64-Bit Server VM, Java 1.7.0_67)
+Type in expressions to have them evaluated.
+Type :help for more information.
+18/05/10 07:22:37 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+Spark context available as sc (master = local[*], app id = local-1525962160959).
+18/05/10 07:23:17 WARN metastore.ObjectStore: Version information not found in metastore. hive.metastore.schema.verification is not enabled so recording the schema version 1.1.0
+18/05/10 07:23:17 WARN metastore.ObjectStore: Failed to get database default, returning NoSuchObjectException
+18/05/10 07:23:27 WARN shortcircuit.DomainSocketFactory: The short-circuit local reads feature cannot be used because libhadoop cannot be loaded.
+SQL context available as sqlContext.
+
+scala> val df = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "true").load("person.csv");
+df: org.apache.spark.sql.DataFrame = [name: string, city: string]
+
+scala> df.show();
++--------+-----+
+|    name| city|
++--------+-----+
+|  deveki| pune|
+|    ajay|noida|
+|abhilekh| pune|
++--------+-----+
+
+scala> val df = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "true").load("Person_Master_CSV_150000.csv");
+df: org.apache.spark.sql.DataFrame = [panNo: string, aadharNo: bigint, firstName: string, lastName: string, city: string, genderCode: string, countryCode: string, graduation: string, graduationCourseCode: string, postGraduation: string, postGraduationCode: string]
+
+scala> df.groupBy("genderCode").count().show();
++----------+------+                                                             
+|genderCode| count|
++----------+------+
+|         F| 21000|
+|         M|129000|
++----------+------+
+
+
+scala> 
+
+scala> val df = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "true").load("Person_Master_CSV_150000.csv").groupBy("genderCode").count();
+df: org.apache.spark.sql.DataFrame = [genderCode: string, count: bigint]
+
+scala> df.show();
++----------+------+                                                             
+|genderCode| count|
++----------+------+
+|         F| 21000|
+|         M|129000|
++----------+------+
+
+
+scala> val df2 = df.as("df").join(gender_master_table.as("gender"), df("genderCode")===gender_master_table("genderCode"));
+df2: org.apache.spark.sql.DataFrame = [genderCode: string, count: bigint, genderCode: string, gender: string]
+scala> val df3 = df2.select($"gender.gender",$"df.count");
+df3: org.apache.spark.sql.DataFrame = [gender: string, count: bigint]
+
+scala> df3.show();
++------+------+                                                                 
+|gender| count|
++------+------+
+|Female| 21000|
+|  Male|129000|
++------+------+
+
+
+Save the Dataframe in Csv file. (The file will be created on HDFS)
+scala> df3.coalesce(1).write.format("com.databricks.spark.csv").save("sample.csv")
+
+
+

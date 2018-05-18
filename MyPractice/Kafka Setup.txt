@@ -1,0 +1,27 @@
+Kafka Setup and Commands Executions--------------------
+1. Download and Extract Kafka.
+2. Set up KAFKA_HOME and set path.
+*******************************************************************************************************************************************************
+				Start Zukeeper
+D:\softwares\kafka_2.11-1.1.0>.\bin\windows\zookeeper-server-start .\config\zookeeper.properties
+
+*******************************************************************************************************************************************************
+				Start Kafka
+D:\softwares\kafka_2.11-1.1.0>.\bin\windows\kafka-server-start.bat .\config\server.properties
+
+*******************************************************************************************************************************************************
+				Create Topic
+
+D:\softwares\kafka_2.11-1.1.0\bin\windows>kafka-topics.bat --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test
+Created topic "test".
+
+*******************************************************************************************************************************************************
+				Start Producer
+D:\softwares\kafka_2.11-1.1.0\bin\windows>kafka-console-producer.bat --broker-list localhost:9092 --topic test
+
+
+*******************************************************************************************************************************************************
+				Start Consumer
+D:\softwares\kafka_2.11-1.1.0\bin\windows>kafka-console-consumer.bat --zookeeper localhost:2181 --topic test
+
+*******************************************************************************************************************************************************

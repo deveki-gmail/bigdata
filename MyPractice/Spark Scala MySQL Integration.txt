@@ -1,0 +1,134 @@
+To Allow MYSQL Server to Access from Remote machine, Run this command first so that 
+Remote machine which IP is  '  192.168.110.131 ' can access the MySQL Server DB.
+
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'192.168.110.131' IDENTIFIED BY 'admin' WITH GRANT OPTION;
+
+------------------------------------------------------------------------------------------------------------
+					Spark / Scala Commands :
+------------------------------------------------------------------------------------------------------------
+scala> val url = "jdbc:mysql://172.20.135.103:3306/test"
+url: String = jdbc:mysql://172.20.135.103:3306/test
+
+scala> val user = "root"
+user: String = root
+
+scala> val password = "admin"
+password: String = admin
+
+scala> Class.forName("com.mysql.jdbc.Driver")
+res0: Class[_] = class com.mysql.jdbc.Driver
+
+scala> import java.util.Properties
+import java.util.Properties
+
+scala> val connectionProperties = new Properties()
+connectionProperties: java.util.Properties = {}
+
+scala> connectionProperties.put("user", user)
+res1: Object = null
+
+scala> connectionProperties.put("user", "root")
+res2: Object = root
+
+scala> connectionProperties.put("password", "admin")
+res3: Object = null
+
+scala> connectionProperties
+res4: java.util.Properties = {user=root, password=admin}
+
+scala> import java.sql.DriverManager
+import java.sql.DriverManager
+
+scala> val connection = DriverManager.getConnection(url, "root", "admin")
+connection: java.sql.Connection = com.mysql.jdbc.JDBC4Connection@78fea03c
+
+scala> connection.isClosed()
+res5: Boolean = false
+
+scala> val employees_table = sqlContext.read.jdbc(url, "emp", connectionProperties)
+employees_table: org.apache.spark.sql.DataFrame = [id: int, name: string, city: string, comp: string, salary: int]
+
+scala> employees_table.printSchema()
+root
+ |-- id: integer (nullable = false)
+ |-- name: string (nullable = true)
+ |-- city: string (nullable = true)
+ |-- comp: string (nullable = true)
+ |-- salary: integer (nullable = true)
+
+
+scala> employees_table.show()
++---+--------+-------+---------+------+
+| id|    name|   city|     comp|salary|
++---+--------+-------+---------+------+
+|  1|Prashant|  INDOR|  FUJITSU| 70000|
+|  2| Nandini| KANPUR|      NTT| 80000|
+|  3|  AAdesh| KANPUR|      NTT| 40000|
+|  4|  Mangla| BHOPAL|SYNECHRON| 40000|
+|  5| Praddep|LUCKNOW|  FUJITSU| 70000|
+|  6|  Prabhu| KANPUR|    IGATE|120000|
+|  7|   Sagar|   PUNE|    IGATE| 90000|
+|  8|   Pappu| KANPUR|    WIPRO| 50000|
+|  9|   Tarun|   PUNE|    IGATE|120000|
+| 10|   Kiran|  INDOR|  FUJITSU| 90000|
+| 11|    Ashu| BHOPAL|    WIPRO| 80000|
+| 12|  Mangla| BHOPAL|      TCS| 80000|
+| 13|    Raja| NAGPUR|      NTT| 80000|
+| 14|   Kiran|GWALIOR|    WIPRO| 40000|
+| 15|  Mangla| KANPUR|      TCS| 90000|
+| 16|   Tarun|  INDOR|    WIPRO| 50000|
+| 17|    Raja| KANPUR|    WIPRO|120000|
+| 18|Prashant|GWALIOR|    WIPRO| 90000|
+| 19|  Mangla| NAGPUR|  FUJITSU| 90000|
+| 20|    Ashu|GWALIOR|    IGATE| 80000|
++---+--------+-------+---------+------+
+only showing top 20 rows
+
+scala> val countByCity =  employees.groupBy("city").count()
+<console>:27: error: not found: value employees
+         val countByCity =  employees.groupBy("city").count()
+                            ^
+
+scala> val countByCity =  employees_table.groupBy("city").count()
+countByCity: org.apache.spark.sql.DataFrame = [city: string, count: bigint]
+
+scala> countByCity.show()
++-------+-----+                                                                 
+|   city|count|
++-------+-----+
+| BANDRA|  216|
+| KANPUR|  248|
+| MUMBAI|  211|
+| BHOPAL|  203|
+|GWALIOR|  232|
+|  INDOR|  230|
+|   PUNE|  220|
+| NAGPUR|  217|
+|LUCKNOW|  223|
++-------+-----+
+
+
+scala> var countByComp = employees_table.groupBy("comp").count()
+countByComp: org.apache.spark.sql.DataFrame = [comp: string, count: bigint]
+
+scala> countByComp.show()
++---------+-----+                                                               
+|     comp|count|
++---------+-----+
+|      NTT|  331|
+|      TCS|  340|
+|SYNECHRON|  352|
+|  FUJITSU|  326|
+|    IGATE|  342|
+|    WIPRO|  309|
++---------+-----+
+
+
+scala> var emp = employees_table;
+emp: org.apache.spark.sql.DataFrame = [id: int, name: string, city: string, comp: string, salary: int]
+                                                                               
+scala> countByComp.write.format("json").save("/user/testwork/sample")
+                                                                                
+scala>
+
+------------------------------------------------------------------------------------------------------------------

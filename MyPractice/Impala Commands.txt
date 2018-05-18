@@ -1,0 +1,217 @@
+[cloudera@quickstart ~]$ impala-shell
+Starting Impala Shell without Kerberos authentication
+Connected to quickstart.cloudera:21000
+Server version: impalad version 2.6.0-cdh5.8.0 RELEASE (build 5464d1750381b40a7e7163b12b09f11b891b4de3)
+***********************************************************************************
+Welcome to the Impala shell. Copyright (c) 2015 Cloudera, Inc. All rights reserved.
+(Impala Shell v2.6.0-cdh5.8.0 (5464d17) built on Thu Jun 16 12:35:00 PDT 2016)
+
+Run the PROFILE command after a query has finished to see a comprehensive summary
+of all the performance and diagnostic information that Impala gathered for that
+query. Be warned, it can be very long!
+***********************************************************************************
+[quickstart.cloudera:21000] > select version()
+                            > ;
+Query: select version()
++-----------------------------------------------------------------------------------------+
+| version()                                                                               |
++-----------------------------------------------------------------------------------------+
+| impalad version 2.6.0-cdh5.8.0 RELEASE (build 5464d1750381b40a7e7163b12b09f11b891b4de3) |
+| Built on Thu, 16 Jun 2016 12:43:48 PST                                                  |
++-----------------------------------------------------------------------------------------+
+Fetched 1 row(s) in 1.49s
+[quickstart.cloudera:21000] > show databases();
+
+[quickstart.cloudera:21000] > show databases;
+Query: show databases
++------------------+----------------------------------------------+
+| name             | comment                                      |
++------------------+----------------------------------------------+
+| _impala_builtins | System database for Impala builtin functions |
+| default          | Default Hive database                        |
+| deveki           |                                              |
++------------------+----------------------------------------------+
+Fetched 3 row(s) in 0.17s
+[quickstart.cloudera:21000] > select current_database();
+Query: select current_database()
++--------------------+
+| current_database() |
++--------------------+
+| default            |
++--------------------+
+Fetched 1 row(s) in 0.11s
+
+[quickstart.cloudera:21000] > show tables;
+Query: show tables
+
+Fetched 0 row(s) in 0.12s
+[quickstart.cloudera:21000] > use deveki;
+Query: use deveki
+[quickstart.cloudera:21000] > show tables;
+Query: show tables
++------+
+| name |
++------+
+| emp  |
++------+
+Fetched 1 row(s) in 0.01s
+[quickstart.cloudera:21000] > describe emp;
+Query: describe emp
++---------+--------+---------+
+| name    | type   | comment |
++---------+--------+---------+
+| id      | int    |         |
+| name    | string |         |
+| city    | string |         |
+| company | string |         |
+| salary  | int    |         |
++---------+--------+---------+
+Fetched 5 row(s) in 5.26s
+[quickstart.cloudera:21000] > select count(*) from em;
+Query: select count(*) from em
+ERROR: AnalysisException: Could not resolve table reference: 'em'
+
+[quickstart.cloudera:21000] > select count(*) from emp;
+Query: select count(*) from emp
++----------+
+| count(*) |
++----------+
+| 100000   |
++----------+
+Fetched 1 row(s) in 1.63s
+[quickstart.cloudera:21000] > select city, company, count(*) from emp group by city, company;
+Query: select city, company, count(*) from emp group by city, company
++---------+-----------+----------+
+| city    | company   | count(*) |
++---------+-----------+----------+
+| LUCKNOW | SYNECHRON | 1918     |
+| NAGPUR  | WIPRO     | 1815     |
+| INDOR   | SYNECHRON | 1821     |
+| KANPUR  | NTT       | 1927     |
+| BANDRA  | IGATE     | 1902     |
+| PUNE    | TCS       | 1803     |
+| KANPUR  | FUJITSU   | 1858     |
+| GWALIOR | SYNECHRON | 1861     |
+| MUMBAI  | IGATE     | 1894     |
+| NAGPUR  | FUJITSU   | 1843     |
+| BANDRA  | NTT       | 1766     |
+| NAGPUR  | SYNECHRON | 1869     |
+| GWALIOR | WIPRO     | 1886     |
+| BHOPAL  | IGATE     | 1881     |
+| KANPUR  | TCS       | 1815     |
+| MUMBAI  | FUJITSU   | 1742     |
+| LUCKNOW | IGATE     | 1823     |
+| PUNE    | NTT       | 1860     |
+| PUNE    | IGATE     | 1921     |
+| BANDRA  | FUJITSU   | 1896     |
+| KANPUR  | IGATE     | 1888     |
+| INDOR   | FUJITSU   | 1878     |
+| BANDRA  | TCS       | 1893     |
+| INDOR   | WIPRO     | 1834     |
+| INDOR   | TCS       | 1861     |
+| KANPUR  | WIPRO     | 1812     |
+| NAGPUR  | NTT       | 1778     |
+| PUNE    | FUJITSU   | 1902     |
+| PUNE    | WIPRO     | 1894     |
+| LUCKNOW | NTT       | 1840     |
+| MUMBAI  | SYNECHRON | 1857     |
+| GWALIOR | TCS       | 1882     |
+| LUCKNOW | FUJITSU   | 1850     |
+| INDOR   | IGATE     | 1852     |
+| BANDRA  | SYNECHRON | 1856     |
+| GWALIOR | IGATE     | 1837     |
+| MUMBAI  | TCS       | 1901     |
+| LUCKNOW | WIPRO     | 1887     |
+| BHOPAL  | TCS       | 1888     |
+| BHOPAL  | WIPRO     | 1850     |
+| GWALIOR | FUJITSU   | 1822     |
+| PUNE    | SYNECHRON | 1857     |
+| KANPUR  | SYNECHRON | 1852     |
+| LUCKNOW | TCS       | 1847     |
+| NAGPUR  | TCS       | 1850     |
+| BANDRA  | WIPRO     | 1835     |
+| INDOR   | NTT       | 1809     |
+| MUMBAI  | WIPRO     | 1814     |
+| BHOPAL  | FUJITSU   | 1825     |
+| GWALIOR | NTT       | 1813     |
+| MUMBAI  | NTT       | 1908     |
+| BHOPAL  | SYNECHRON | 1803     |
+| BHOPAL  | NTT       | 1840     |
+| NAGPUR  | IGATE     | 1784     |
++---------+-----------+----------+
+Fetched 54 row(s) in 0.77s
+[quickstart.cloudera:21000] > select company, city,count(*) from emp group by city, company;
+Query: select company, city,count(*) from emp group by city, company
++-----------+---------+----------+
+| company   | city    | count(*) |
++-----------+---------+----------+
+| SYNECHRON | LUCKNOW | 1918     |
+| WIPRO     | NAGPUR  | 1815     |
+| SYNECHRON | INDOR   | 1821     |
+| NTT       | KANPUR  | 1927     |
+| IGATE     | BANDRA  | 1902     |
+| TCS       | PUNE    | 1803     |
+| FUJITSU   | KANPUR  | 1858     |
+| SYNECHRON | GWALIOR | 1861     |
+| IGATE     | MUMBAI  | 1894     |
+| FUJITSU   | NAGPUR  | 1843     |
+| NTT       | BANDRA  | 1766     |
+| SYNECHRON | NAGPUR  | 1869     |
+| WIPRO     | GWALIOR | 1886     |
+| IGATE     | BHOPAL  | 1881     |
+| TCS       | KANPUR  | 1815     |
+| FUJITSU   | MUMBAI  | 1742     |
+| IGATE     | LUCKNOW | 1823     |
+| NTT       | PUNE    | 1860     |
+| IGATE     | PUNE    | 1921     |
+| FUJITSU   | BANDRA  | 1896     |
+| IGATE     | KANPUR  | 1888     |
+| FUJITSU   | INDOR   | 1878     |
+| TCS       | BANDRA  | 1893     |
+| WIPRO     | INDOR   | 1834     |
+| TCS       | INDOR   | 1861     |
+| WIPRO     | KANPUR  | 1812     |
+| NTT       | NAGPUR  | 1778     |
+| FUJITSU   | PUNE    | 1902     |
+| WIPRO     | PUNE    | 1894     |
+| NTT       | LUCKNOW | 1840     |
+| SYNECHRON | MUMBAI  | 1857     |
+| TCS       | GWALIOR | 1882     |
+| FUJITSU   | LUCKNOW | 1850     |
+| IGATE     | INDOR   | 1852     |
+| SYNECHRON | BANDRA  | 1856     |
+| IGATE     | GWALIOR | 1837     |
+| TCS       | MUMBAI  | 1901     |
+| WIPRO     | LUCKNOW | 1887     |
+| TCS       | BHOPAL  | 1888     |
+| WIPRO     | BHOPAL  | 1850     |
+| FUJITSU   | GWALIOR | 1822     |
+| SYNECHRON | PUNE    | 1857     |
+| SYNECHRON | KANPUR  | 1852     |
+| TCS       | LUCKNOW | 1847     |
+| TCS       | NAGPUR  | 1850     |
+| WIPRO     | BANDRA  | 1835     |
+| NTT       | INDOR   | 1809     |
+| WIPRO     | MUMBAI  | 1814     |
+| FUJITSU   | BHOPAL  | 1825     |
+| NTT       | GWALIOR | 1813     |
+| NTT       | MUMBAI  | 1908     |
+| SYNECHRON | BHOPAL  | 1803     |
+| NTT       | BHOPAL  | 1840     |
+| IGATE     | NAGPUR  | 1784     |
++-----------+---------+----------+
+Fetched 54 row(s) in 0.75s
+[quickstart.cloudera:21000] > select company,count(*) from emp group by company;
+Query: select company,count(*) from emp group by company
++-----------+----------+
+| company   | count(*) |
++-----------+----------+
+| IGATE     | 16782    |
+| FUJITSU   | 16616    |
+| SYNECHRON | 16694    |
+| TCS       | 16740    |
+| NTT       | 16541    |
+| WIPRO     | 16627    |
++-----------+----------+
+Fetched 6 row(s) in 0.65s
+[quickstart.cloudera:21000] > 

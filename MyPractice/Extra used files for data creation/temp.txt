@@ -1,0 +1,26 @@
+val url = "jdbc:mysql://172.20.135.103:3306/test?user=root;password=admin"
+
+
+val df = sqlContext.read.format("jdbc").option("url", url).option("dbtable", "emp").load()
+
+
+https://www.freemysqlhosting.net
+Feb@2014@123
+
+
+sql12.freemysqlhosting.net - Server
+sql12232998 - DB Name
+sql12232998 - DB User Name
+wUXtQ4QmGC  - Password
+
+
+val url = "jdbc:mysql://sql12.freemysqlhosting.net/sql12232998?user=sql12232998;password=wUXtQ4QmGC"
+
+
+GRANT ALL PRIVILEGES ON *.* TO 'USERNAME'@'1.2.3.4' IDENTIFIED BY 'PASSWORD' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'192.168.110.131' IDENTIFIED BY 'admin' WITH GRANT OPTION;
+
+
+echo 'object HelloWorld {def main(args: Array[String]) = println("Hello, world!")}' > HelloWorld.scala
+
+echo 'artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) => "HelloWorld.jar" }' > build.sbt
